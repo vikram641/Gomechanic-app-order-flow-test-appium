@@ -1,10 +1,13 @@
 package org.example;
 
+import com.mongodb.client.*;
+import com.mongodb.client.result.UpdateResult;
 import io.appium.java_client.TouchAction;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.touch.WaitOptions;
 import io.appium.java_client.touch.offset.PointOption;
+import org.bson.Document;
 import org.openqa.selenium.By;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -20,8 +23,16 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Projections.*;
+import static com.mongodb.client.model.Sorts.descending;
+import static com.mongodb.client.model.Updates.set;
+
+
 public class main {
-    public static void main(String[] args) {
+    public static <UpdateResult> void main(String[] args) {
+        String uri = "mongodb://localhost:27017";
+
         try {
             // Set desired capabilities
             UiAutomator2Options options = new UiAutomator2Options();
@@ -38,6 +49,8 @@ public class main {
 
             // Appium server URL
             URL serverURL = new URL("http://127.0.0.1:4723/");
+            String randomNumber = randomNum.generateValidTenDigitNumber();
+
 
             // Start driver
             AndroidDriver driver = new AndroidDriver(serverURL, options);
@@ -69,7 +82,7 @@ public class main {
             selectTime.click();
 
             WebElement paymentMethod = wait.until(ExpectedConditions.elementToBeClickable(
-                    By.xpath("(//android.widget.ImageView[@resource-id=\"gomechanic.retail:id/ivRBPaymentHeaderLPCPF\"])[1]\n")));
+                    By.xpath("//android.widget.ImageView[@resource-id=\"gomechanic.retail:id/ivRBPaymentHeaderLPCPF\"])[1]\n")));
             paymentMethod.click();
             WebElement payNow = wait.until(ExpectedConditions.elementToBeClickable(
                     By.xpath("//android.widget.TextView[@resource-id=\"gomechanic.retail:id/tvCheckOutCPF\"]\n")));
@@ -89,51 +102,73 @@ public class main {
             }
 
 
-//
-//            WebElement viewCart = wait.until(ExpectedConditions.elementToBeClickable(
-//                    By.xpath("//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clServiceViewCartBottom\"]")));
-//            viewCart.click();
-//            driver.findElement(By.xpath("//android.view.ViewGroup[@resource-id=\\\"gomechanic.retail:id/clServiceViewCartBottom\\")).click();
-//
-//            System.out.println("success");
-//
-//            WebElement serviceBottom = wait.until(ExpectedConditions.elementToBeClickable(
-//                    By.xpath("//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clServiceBottom\"]\n")));
-//            serviceBottom.click();
-//
-//            System.out.println("success 1");
-//
-//            WebElement checkout = wait.until(ExpectedConditions.elementToBeClickable(
-//                    By.xpath("//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clServiceViewCartBottom\"]\n")));
-//            checkout.click();
-//            System.out.println("success 2");
-//
-//            WebElement timeSlot = wait.until(ExpectedConditions.elementToBeClickable(
-//                    By.xpath("(//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clTimeView\"])[1]")));
-//            timeSlot.click();
-//            driver.findElement(By.xpath("(//android.widget.ImageView[@resource-id=\"gomechanic.retail:id/ivRBPaymentHeaderLPCPF\"])[1]\n")).click();
-//            Thread.sleep(100);
-//            driver.findElement(By.xpath("//android.widget.TextView[@resource-id=\"gomechanic.retail:id/tvCheckOutCPF\"]\n")).click();
-//            Thread.sleep(500);
-//            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-//            File destination = new File("screenshots/homepage.png");
-//
-//            try {
-//                Files.createDirectories(destination.getParentFile().toPath()); // Create directory if not exists
-//                Files.copy(screenshot.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
-//                System.out.println("📸 Screenshot saved at: " + destination.getAbsolutePath());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            String order = "20240314976355275";
+            try (MongoClient mongoClient = MongoClients.create(uri)) {
+                MongoDatabase database = mongoClient.getDatabase("prod");
+                MongoCollection<org.bson.Document> collection = database.getCollection("orders");
+                com.mongodb.client.result.UpdateResult result = collection.updateOne(
+                        eq("order_id", order),     // filter
+                        set("status_id", 21)             // update
+                );
+                System.out.println("Matched documents: " + result.getMatchedCount());
+                System.out.println("Modified documents: " + result.getModifiedCount());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
 
-            // Close app
-            driver.quit();
-
+//
+////
+////            WebElement viewCart = wait.until(ExpectedConditions.elementToBeClickable(
+////                    By.xpath("//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clServiceViewCartBottom\"]")));
+////            viewCart.click();
+////            driver.findElement(By.xpath("//android.view.ViewGroup[@resource-id=\\\"gomechanic.retail:id/clServiceViewCartBottom\\")).click();
+////
+////            System.out.println("success");
+////
+////            WebElement serviceBottom = wait.until(ExpectedConditions.elementToBeClickable(
+////                    By.xpath("//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clServiceBottom\"]\n")));
+////            serviceBottom.click();
+////
+////            System.out.println("success 1");
+////
+////            WebElement checkout = wait.until(ExpectedConditions.elementToBeClickable(
+////                    By.xpath("//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clServiceViewCartBottom\"]\n")));
+////            checkout.click();
+////            System.out.println("success 2");
+////
+////            WebElement timeSlot = wait.until(ExpectedConditions.elementToBeClickable(
+////                    By.xpath("(//android.view.ViewGroup[@resource-id=\"gomechanic.retail:id/clTimeView\"])[1]")));
+////            timeSlot.click();
+////            driver.findElement(By.xpath("(//android.widget.ImageView[@resource-id=\"gomechanic.retail:id/ivRBPaymentHeaderLPCPF\"])[1]\n")).click();
+////            Thread.sleep(100);
+////            driver.findElement(By.xpath("//android.widget.TextView[@resource-id=\"gomechanic.retail:id/tvCheckOutCPF\"]\n")).click();
+////            Thread.sleep(500);
+////            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+////            File destination = new File("screenshots/homepage.png");
+////
+////            try {
+////                Files.createDirectories(destination.getParentFile().toPath()); // Create directory if not exists
+////                Files.copy(screenshot.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
+////                System.out.println("📸 Screenshot saved at: " + destination.getAbsolutePath());
+////            } catch (IOException e) {
+////                e.printStackTrace();
+////            }
+//
+//
+//            // Close app
+//            driver.quit();
+//
         } catch (MalformedURLException e) {
             System.out.println("Invalid Appium Server URL");
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+
+
+
+
     }
 }
