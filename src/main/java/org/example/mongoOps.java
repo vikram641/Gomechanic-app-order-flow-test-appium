@@ -37,7 +37,7 @@ public class mongoOps {
 public static String getOtpByPhone(String phone) {
     String otp = null;
 
-    try (MongoClient mongoClient = MongoClients.create("mongodb+srv://ro:readonly@prod.wwz39.mongodb.net/?")) {
+    try (MongoClient mongoClient = MongoClients.create("give your mongo url ")) {
         MongoDatabase database = mongoClient.getDatabase("prod");
         MongoCollection<Document> collection = database.getCollection("mongo_sessions");
 
